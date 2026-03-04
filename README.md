@@ -13,7 +13,7 @@ Este projeto faz parte da minha jornada de aprendizado técnico, onde estou expl
 
 🛠️ Tecnologias e Ferramentas
 * Linguagens: HTML, CSS, Java Script / Node.js e  Python
-*Banco de Dados: PgAdmin -> Banco principal/ Docker Desktop -> Auxilio em vetores no Banco e "SubIa"
+* Banco de Dados: PgAdmin -> Banco principal/ Docker Desktop -> Auxilio em vetores no Banco e "SubIa"
 * Versionamento: Git & GitHub (com suporte a Git LFS para arquivos pesados)
 * Status: Estudando integrações de APIs e lógica de processamento de dados.
   
