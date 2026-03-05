@@ -5,6 +5,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 
+// Configuração do dotenv partindo do diretório atual
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -55,27 +56,25 @@ try {
   // =========================
   // FRONTEND STATIC
   // =========================
-  const frontendPath = path.join(__dirname, "../frontend");
+  // Correção definitiva: __dirname (pasta backend) -> '..' (raiz) -> 'frontend'
+  const frontendPath = path.join(__dirname, "..", "frontend");
 
   app.use(express.static(frontendPath));
 
-  // SPA fallback
+  // SPA fallback - Apenas uma vez com tratamento de erro detalhado
   app.get("*", (req, res) => {
-    // Adicionamos um erro personalizado caso o arquivo realmente não exista
     res.sendFile(path.join(frontendPath, "index.html"), (err) => {
       if (err) {
+        // Se der erro, este JSON aparecerá na tela nos dizendo o caminho exato
         res.status(404).json({
           success: false,
           status: 404,
           message:
             "Arquivo index.html não encontrado no caminho: " + frontendPath,
+          info: "Verifique se a pasta 'frontend' está na raiz do seu GitHub",
         });
       }
     });
-  });
-  // SPA fallback
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(frontendPath, "index.html"));
   });
 
   console.log("--- [4] Frontend Static OK ---");
