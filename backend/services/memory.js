@@ -1,44 +1,100 @@
-import pool from "../config/database.js"; // Ajustado para o nome do arquivo que configuramos antes
+import pool from "../config/database.js";
+
+// ID Temporário para contornar a falta de login e manter a integridade do banco (UUID fixo)
+const TEMP_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 export class MemoryService {
   /**
-   * Salva a conversa no banco de dados (Docker Porta 5433)
+   * Salva a conversa de forma robusta nas tabelas 'chat_sessions' e 'messages'
+   * Implementa transação para garantir que usuário e IA sejam salvos juntos.
    */
-  static async saveConversation(sessionId, userMessage, aiResponse, model = 'gemini-pro', tokens = 0) {
+  static async saveConversation({
+    sessionId,
+    userId,
+    message,
+    response,
+    model = "gemini-pro",
+  }) {
+    const client = await pool.connect();
     try {
-      // Ajustado para bater com as colunas da sua tabela 'conversations'
-      const query = `
-        INSERT INTO conversations 
-        (user_message, ai_response, model_version, tokens_used) 
-        VALUES ($1, $2, $3, $4)
+      await client.query("BEGIN"); // Inicia transação
+
+      // 1. Garante que a sessão existe (ou cria uma nova)
+      // Usamos TEMP_USER_ID se o userId não for fornecido
+      const sessionCheckQuery = `
+        INSERT INTO chat_sessions (id, user_id, title, model_name) 
+        VALUES ($1, $2, $3, $4) 
+        ON CONFLICT (id) DO NOTHING
       `;
-      
-      await pool.query(query, [userMessage, aiResponse, model, tokens]);
-      console.log("💾 Conversa salva no banco de dados.");
-    } catch (err) {
-      console.error("❌ Erro ao salvar memória no banco:", err.message);
-    }
-  }
+      await client.query(sessionCheckQuery, [
+        sessionId,
+        userId || TEMP_USER_ID,
+        message.substring(0, 50), // Título automático baseado no início da mensagem
+        model,
+      ]);
 
-  /**
-   * Busca o contexto recente para a IA não ficar "desmemoriada"
-   */
-  static async getRecentContext(limit = 5) {
-    try {
-      const { rows } = await pool.query(
-        "SELECT user_message, ai_response FROM conversations ORDER BY created_at DESC LIMIT $1",
-        [limit]
+      // 2. Salva a mensagem do USUÁRIO
+      await client.query(
+        "INSERT INTO messages (session_id, role, content) VALUES ($1, $2, $3)",
+        [sessionId, "user", message]
       );
-      // Inverte para que a conversa fique na ordem cronológica correta para a IA
-      return rows.reverse();
+
+      // 3. Salva a resposta da IA (assistant)
+      await client.query(
+        "INSERT INTO messages (session_id, role, content) VALUES ($1, $2, $3)",
+        [sessionId, "assistant", response]
+      );
+
+      await client.query("COMMIT");
+      console.log(`💾 Sessão ${sessionId} salva/atualizada com sucesso.`);
     } catch (err) {
-      console.error("❌ Erro ao buscar contexto:", err.message);
-      return []; // Retorna lista vazia para não travar o chat se o banco falhar
+      await client.query("ROLLBACK");
+      console.error("❌ Erro ao salvar memória no banco:", err.message);
+      throw err;
+    } finally {
+      client.release();
     }
   }
 
   /**
-   * Futuro: Aqui entrará a busca por similaridade (pgvector)
-   * SELECT * FROM memory_vectors ORDER BY embedding <-> $1 LIMIT 5
+   * Busca o contexto real da tabela 'messages' para alimentar o Gemini.
+   * Isso dá suporte para as conversas "AI PRO" e "Debug" terem memória.
    */
+  static async getRecentContext(sessionId, limit = 10) {
+    try {
+      const query = `
+        SELECT role, content 
+        FROM messages 
+        WHERE session_id = $1 
+        ORDER BY created_at ASC 
+        LIMIT $2
+      `;
+      const { rows } = await pool.query(query, [sessionId, limit]);
+      return rows; // Retorna array de { role: '...', content: '...' }
+    } catch (err) {
+      console.error("❌ Erro ao buscar contexto do banco:", err.message);
+      return [];
+    }
+  }
+
+  /**
+   * Recupera todas as sessões para carregar na Sidebar do Frontend.
+   * Enquanto não há login, buscamos pelo TEMP_USER_ID.
+   */
+  static async getUserSessions(userId) {
+    try {
+      const targetUser = userId || TEMP_USER_ID;
+      const query = `
+        SELECT id, title, created_at 
+        FROM chat_sessions 
+        WHERE user_id = $1 
+        ORDER BY created_at DESC
+      `;
+      const { rows } = await pool.query(query, [targetUser]);
+      return rows;
+    } catch (err) {
+      console.error("❌ Erro ao buscar sessões:", err.message);
+      return [];
+    }
+  }
 }
