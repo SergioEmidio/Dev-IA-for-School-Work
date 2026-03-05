@@ -55,10 +55,24 @@ try {
   // =========================
   // FRONTEND STATIC
   // =========================
-  const frontendPath = path.resolve(process.cwd(), "../frontend");
+  const frontendPath = path.join(__dirname, "../frontend");
 
   app.use(express.static(frontendPath));
 
+  // SPA fallback
+  app.get("*", (req, res) => {
+    // Adicionamos um erro personalizado caso o arquivo realmente não exista
+    res.sendFile(path.join(frontendPath, "index.html"), (err) => {
+      if (err) {
+        res.status(404).json({
+          success: false,
+          status: 404,
+          message:
+            "Arquivo index.html não encontrado no caminho: " + frontendPath,
+        });
+      }
+    });
+  });
   // SPA fallback
   app.get("*", (req, res) => {
     res.sendFile(path.join(frontendPath, "index.html"));
