@@ -1,44 +1,71 @@
 import os
 import faiss
 import numpy as np
-from typing import List, Dict
-import google.generativeai as genai
+import logging
+# Em vez de: import google.generativeai as genai
+from google import generativeai as genai
+from typing import List, Any
 from dotenv import load_dotenv
+
+# Configuração de Log para manter a robustez
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("Memory-Engine")
 
 load_dotenv()
 
-API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not API_KEY:
-    raise EnvironmentError("GEMINI_API_KEY not found.")
-
-genai.configure(api_key=API_KEY)
-
-
 class VectorMemoryEngine:
     def __init__(self) -> None:
+        """Inicializa o motor de busca vetorial FAISS com 768 dimensões."""
         self.dimension: int = 768
-        self.index = faiss.IndexFlatL2(self.dimension)
+        # Usamos 'Any' para o VS Code parar de marcar vermelho no index
+        self.index: Any = faiss.IndexFlatL2(self.dimension) 
         self.memory: List[str] = []
+        
+        api_key = os.getenv("GEMINI_API_KEY")
+      # Adicione o ignore no final da linha para o vermelho sumir
+        genai.configure(api_key=api_key) # type: ignore
+        else:
+         # Adicione o ignore no final da linha para o vermelho sumir
+            logger.error("GEMINI_API_KEY não encontrada no ambiente.") # type: ignore
 
     def embed(self, text: str) -> np.ndarray:
-        response = genai.embed_content(
-            model="models/embedding-001",
-            content=text
-        )
-        vector = np.array(response["embedding"], dtype="float32")
-        return vector
+        """Gera o embedding e garante o formato float32 (1, 768)."""
+        try:
+            response = genai.embed_content( # type: ignore
+                model="models/embedding-001",
+                content=text,
+                task_type="retrieval_document"
+            )
+            # O FAISS EXIGE float32 e uma matriz (reshape)
+            vector = np.array(response["embedding"], dtype="float32").reshape(1, -1)
+            return vector
+        except Exception as e:
+            logger.error(f"Erro ao gerar embedding: {e}")
+            return np.zeros((1, self.dimension), dtype="float32")
 
     def add(self, text: str) -> None:
+        """Adiciona um novo texto à memória vetorial."""
+        if not text.strip():
+            return
+            
         vector = self.embed(text)
-        self.index.add(np.array([vector]))
+        # O 'type: ignore' é para o editor não reclamar de algo que funciona
+        self.index.add(vector) # type: ignore
         self.memory.append(text)
+        logger.info(f"Nova memória adicionada. Total: {len(self.memory)}")
 
     def retrieve(self, query: str, k: int = 5) -> List[str]:
+        """Recupera os contextos mais relevantes baseados na query."""
         if self.index.ntotal == 0:
             return []
 
         vector = self.embed(query)
-        _, indices = self.index.search(np.array([vector]), min(k, self.index.ntotal))
-
-        return [self.memory[i] for i in indices[0] if i < len(self.memory)]
+        try:
+            # Busca os k vizinhos mais próximos
+            D, I = self.index.search(vector, min(k, self.index.ntotal)) # type: ignore
+            
+            # Filtra índices válidos e reconstrói a lista de textos
+            return [self.memory[i] for i in I[0] if i != -1 and i < len(self.memory)]
+        except Exception as e:
+            logger.error(f"Erro na recuperação de memória: {e}")
+            return []

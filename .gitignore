@@ -1,3 +1,17 @@
-node_modules/
-AI-Engine/venv/
+# Ambientes Virtuais (Python)
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Variáveis de Ambiente (Segurança Crítica)
 .env
+
+# Dependências do Node
+node_modules/
+
+# Logs e arquivos do sistema
+*.log
+.DS_Store
+dist/

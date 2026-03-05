@@ -1,25 +1,95 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>AI-System-Pro</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="app-container">
-    <div class="sidebar">
-      <h2>AI System Pro</h2>
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spec.IA - Sistema Profissional</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <button class="btn-new-chat">
+            <i class="fa-solid fa-plus"></i> Nova conversa
+          </button>
+        </div>
+
+        <div class="sidebar-history">
+          <span class="label">HISTÓRICO</span>
+          <div id="historyList">
+            <div class="history-item active">
+              <i class="fa-regular fa-message"></i> Projeto AI Pro
+            </div>
+            <div class="history-item">
+              <i class="fa-regular fa-message"></i> Debug de Código
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <button class="btn-settings">
+            <i class="fa-solid fa-gear"></i> Configurações e ajuda
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="main-header">
+          <div class="logo">Spec.IA</div>
+          <div class="user-profile">JV</div>
+        </header>
+
+        <div class="chat-viewport">
+          <div id="chatMessages" class="messages-container">
+            <div class="welcome-screen">
+              <h1 class="gradient-text">Spec.IA</h1>
+              <h2>✨ Olá, Sérgio</h2>
+              <p>
+                Tudo pronto para ajudar você a planejar, estudar e dar vida às
+                suas ideias.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <div class="input-wrapper">
+            <div class="input-tools-top">
+              <button class="tool-btn"><i class="fa-solid fa-plus"></i></button>
+              <button class="tool-btn">
+                <i class="fa-solid fa-sliders"></i> Ferramentas
+              </button>
+            </div>
+
+            <textarea
+              id="messageInput"
+              rows="1"
+              placeholder="Peça ao Spec.IA..."
+            ></textarea>
+
+            <div class="input-footer">
+              <div class="model-selector">
+                Rápido <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div class="action-buttons">
+                <button class="icon-btn">
+                  <i class="fa-solid fa-microphone"></i>
+                </button>
+                <button id="sendBtn" class="send-btn">
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
 
-    <div class="chat-container">
-      <div id="chatMessages"></div>
-
-      <div class="input-container">
-        <textarea id="messageInput"></textarea>
-        <button id="sendBtn">Send</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="chat.js"></script>
-</body>
+    <script type="module" src="chat.js"></script>
+  </body>
 </html>

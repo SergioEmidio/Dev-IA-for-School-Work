@@ -3,54 +3,88 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 
-console.log("\n--- [1] Imports Base OK ---");
+console.log("\n--- [1] Core Middlewares OK ---");
 
 try {
-  // Security
+  // =========================
+  // SECURITY
+  // =========================
   const secMod = await import("./middlewares/security.middleware.js");
   const secFn = secMod.securityMiddleware || secMod.default;
+
   if (typeof secFn === "function") {
     secFn(app);
-    console.log("--- [2] Security OK ---");
+    console.log("--- [2] Security Middleware OK ---");
   }
 
-  // Chat Routes - Ajuste para pegar qualquer tipo de export
-  // Diz ao Express para servir os arquivos da pasta 'frontend' (ou o nome da sua pasta)
-  app.use(express.static(path.resolve(process.cwd(), "../frontend")));
-
+  // =========================
+  // CHAT ROUTES
+  // =========================
   const chatMod = await import("./routes/chat.routes.js");
   const chatRouter = chatMod.default || chatMod.router || chatMod;
 
-  if (chatRouter && (typeof chatRouter === "function" || chatRouter.stack)) {
+  if (chatRouter) {
     app.use("/api/chat", chatRouter);
-    console.log("--- [3] Rotas de Chat OK ---");
-  } else {
-    throw new Error(
-      'Verifique se existe "export default router" no chat.routes.js'
-    );
+    console.log("--- [3] Chat Routes OK ---");
   }
 
-  // Error Middleware
+  // =========================
+  // HEALTH CHECK
+  // =========================
+  app.get("/api/health", (req, res) => {
+    res.json({
+      status: "online",
+      service: "Spec.AI",
+      timestamp: new Date(),
+    });
+  });
+
+  // =========================
+  // FRONTEND STATIC
+  // =========================
+  const frontendPath = path.resolve(process.cwd(), "../frontend");
+
+  app.use(express.static(frontendPath));
+
+  // SPA fallback
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
+  });
+
+  console.log("--- [4] Frontend Static OK ---");
+
+  // =========================
+  // ERROR HANDLER
+  // =========================
   const errMod = await import("./middlewares/error.middleware.js");
   const errFn = errMod.errorMiddleware || errMod.default;
+
   if (typeof errFn === "function") {
     app.use(errFn);
-    console.log("--- [4] Error Middleware OK ---");
+    console.log("--- [5] Error Middleware OK ---");
   }
 } catch (err) {
-  console.error("❌ ERRO:", err.message);
+  console.error("❌ ERRO CRÍTICO:", err);
 }
 
-const PORT = process.env.PORT || 3100; // Mudei para 3040 para fugir dos processos travados
+const PORT = process.env.PORT || 3100;
 
 app.listen(PORT, () => {
-  console.log(`\n🚀 SERVIDOR ONLINE: http://localhost:${PORT}\n`);
+  console.log(`
+🚀 SPEC.AI ONLINE
+http://localhost:${PORT}
+`);
 });
