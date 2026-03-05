@@ -5,8 +5,8 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Configuração do dotenv partindo do diretório atual
-dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+// Carrega as variáveis do .env na raiz do projeto
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,84 +20,68 @@ app.use(morgan("dev"));
 console.log("\n--- [1] Core Middlewares OK ---");
 
 try {
-  // =========================
-  // SECURITY
-  // =========================
+  // SECURITY MIDDLEWARE
   const secMod = await import("./middlewares/security.middleware.js");
   const secFn = secMod.securityMiddleware || secMod.default;
-
   if (typeof secFn === "function") {
     secFn(app);
     console.log("--- [2] Security Middleware OK ---");
   }
 
-  // =========================
   // CHAT ROUTES
-  // =========================
   const chatMod = await import("./routes/chat.routes.js");
   const chatRouter = chatMod.default || chatMod.router || chatMod;
-
   if (chatRouter) {
     app.use("/api/chat", chatRouter);
     console.log("--- [3] Chat Routes OK ---");
   }
 
-  // =========================
   // HEALTH CHECK
-  // =========================
   app.get("/api/health", (req, res) => {
-    res.json({
-      status: "online",
-      service: "Spec.AI",
-      timestamp: new Date(),
-    });
+    res.json({ status: "online", service: "Spec.AI" });
   });
 
-  // =========================
-  // FRONTEND STATIC
-  // =========================
-  // Correção definitiva: __dirname (pasta backend) -> '..' (raiz) -> 'frontend'
-  const frontendPath = path.join(__dirname, "..", "frontend");
+  // ==========================================
+  // NOVA LÓGICA ESTRUTURAL: FRONTEND STATIC
+  // ==========================================
+  // Em vez de usar ../ (que estava dando erro), pegamos a raiz do projeto no Render
+  const rootPath = process.cwd(); 
+  const frontendPath = path.join(rootPath, "frontend");
+
+  console.log(`--- Buscando frontend em: ${frontendPath} ---`);
 
   app.use(express.static(frontendPath));
 
-  // SPA fallback - Apenas uma vez com tratamento de erro detalhado
+  // SPA fallback para garantir que o index.html seja entregue
   app.get("*", (req, res) => {
-    res.sendFile(path.join(frontendPath, "index.html"), (err) => {
+    const indexPath = path.join(frontendPath, "index.html");
+    res.sendFile(indexPath, (err) => {
       if (err) {
-        // Se der erro, este JSON aparecerá na tela nos dizendo o caminho exato
+        // Se ainda assim não achar, o erro JSON vai nos dizer exatamente onde ele buscou
         res.status(404).json({
           success: false,
-          status: 404,
-          message:
-            "Arquivo index.html não encontrado no caminho: " + frontendPath,
-          info: "Verifique se a pasta 'frontend' está na raiz do seu GitHub",
+          error: "Frontend não encontrado na estrutura do Render",
+          caminho_tentado: indexPath,
+          raiz_detectada: rootPath
         });
       }
     });
   });
 
-  console.log("--- [4] Frontend Static OK ---");
+  console.log("--- [4] Frontend Static Configurado ---");
 
-  // =========================
   // ERROR HANDLER
-  // =========================
   const errMod = await import("./middlewares/error.middleware.js");
   const errFn = errMod.errorMiddleware || errMod.default;
-
   if (typeof errFn === "function") {
     app.use(errFn);
     console.log("--- [5] Error Middleware OK ---");
   }
 } catch (err) {
-  console.error("❌ ERRO CRÍTICO:", err);
+  console.error("❌ ERRO CRÍTICO NO BACKEND:", err);
 }
 
 const PORT = process.env.PORT || 3100;
-
 app.listen(PORT, () => {
-  console.log(`
-🚀 SPEC.AI ONLINE
-http://localhost:${PORT}
-`);
+  console.log(`🚀 SPEC.AI ONLINE: Porta ${PORT}`);
 });
