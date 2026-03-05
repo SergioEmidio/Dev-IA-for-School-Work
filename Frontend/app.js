@@ -1,32 +1,29 @@
-// Configurações e Seletores
-const API_URL = "https://spec-ia.onrender.com"; // URL do seu Backend no Render
-const chatContainer = document.getElementById("chat-container"); // Onde as mensagens aparecem
-const chatForm = document.getElementById("chat-form"); // O formulário de envio
-const userInput = document.getElementById("user-input"); // A caixa de texto
-const sendButton = document.getElementById("send-btn"); // O botão de enviar
+// Configurações e Seletores - AJUSTADOS PARA SEU HTML
+const API_URL = "https://spec-ia.onrender.com";
+const chatContainer = document.getElementById("chatMessages"); // Ajustado (era chatMessages no HTML)
+const userInput = document.getElementById("messageInput"); // Ajustado (era messageInput no HTML)
+const sendButton = document.getElementById("sendBtn"); // Ajustado (era sendBtn no HTML)
 
-// Histórico para a IA ter memória (opcional, dependendo da sua rota de chat)
+// Histórico para a IA ter memória
 let chatHistory = [];
 
 // Função para adicionar mensagens na tela
 function appendMessage(role, text) {
   const msgDiv = document.createElement("div");
-  msgDiv.className = `message ${role}-message`; // Define estilos diferentes para user e bot
+  msgDiv.className = `message ${role}-message`;
   msgDiv.innerText = text;
   chatContainer.appendChild(msgDiv);
 
-  // Scroll automático para el final
+  // Scroll automático para o final
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 // Função Principal de Envio
-async function handleSubmit(e) {
-  e.preventDefault();
-
+async function handleSubmit() {
   const message = userInput.value.trim();
   if (!message) return;
 
-  // 1. Limpa o input e desativa o botão para evitar cliques duplos
+  // 1. Limpa o input e desativa o botão
   userInput.value = "";
   userInput.disabled = true;
   sendButton.disabled = true;
@@ -41,30 +38,23 @@ async function handleSubmit(e) {
   chatContainer.appendChild(typingIndicator);
 
   try {
-    // 4. Chamada para a API (URL agora utiliza API_URL para o Render)
     const response = await fetch(`${API_URL}/api/chat/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: message,
-        history: chatHistory, // Envia o histórico se sua API suportar
+        history: chatHistory,
       }),
     });
 
     const data = await response.json();
 
-    // Remove indicador de carregamento
     if (typingIndicator.parentNode) chatContainer.removeChild(typingIndicator);
 
     if (response.ok) {
-      // 5. Mostra a resposta da IA
       appendMessage("bot", data.response);
-
-      // Atualiza o histórico local
       chatHistory.push({ role: "user", content: message });
       chatHistory.push({ role: "model", content: data.response });
-
-      // Opcional: Recarregar a sidebar após nova mensagem para atualizar títulos
       loadSidebarSessions();
     } else {
       throw new Error(data.message || "Erro na resposta da IA");
@@ -77,21 +67,24 @@ async function handleSubmit(e) {
       "❌ Ops! Tive um problema ao me conectar. Tente novamente em instantes."
     );
   } finally {
-    // 6. Reativa os controles
     userInput.disabled = false;
     sendButton.disabled = false;
     userInput.focus();
   }
 }
 
-// Ouvinte de Eventos
-chatForm.addEventListener("submit", handleSubmit);
+// --- LOGICA DO BOTÃO E ENTER ---
 
-// Atalho: Enviar com Enter (sem precisar clicar no botão)
+// 1. Clique no botão de enviar
+sendButton.addEventListener("click", () => {
+  handleSubmit();
+});
+
+// 2. Enviar com Enter (sem pular linha)
 userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    chatForm.dispatchEvent(new Event("submit"));
+    e.preventDefault(); // Impede o pulo de linha
+    handleSubmit(); // Chama a função de envio
   }
 });
 
@@ -104,7 +97,6 @@ async function loadSidebarSessions() {
   if (!historyList) return;
 
   try {
-    // Chamada ajustada para o Render
     const response = await fetch(
       `${API_URL}/api/chat/sessions/00000000-0000-0000-0000-000000000000`
     );
@@ -112,15 +104,11 @@ async function loadSidebarSessions() {
 
     if (data.success && data.sessions) {
       historyList.innerHTML = "";
-
       data.sessions.forEach((session) => {
         const item = document.createElement("div");
         item.className = "history-item";
         item.innerHTML = `<i class="fa-regular fa-message"></i> ${session.title}`;
-
-        // --- AQUI ESTÁ A MÁGICA: ---
         item.onclick = () => loadChatMessages(session.id);
-
         historyList.appendChild(item);
       });
     }
@@ -129,36 +117,23 @@ async function loadSidebarSessions() {
   }
 }
 
-// Função para buscar mensagens de uma sessão e exibir na tela
 async function loadChatMessages(sessionId) {
   try {
-    // Chamada ajustada para o Render
     const response = await fetch(`${API_URL}/api/chat/messages/${sessionId}`);
     const data = await response.json();
 
     if (data.success) {
-      // 1. Limpa o container de chat atual
       chatContainer.innerHTML = "";
-
-      // 2. Reseta o histórico local da memória da IA
       chatHistory = [];
-
-      // 3. Adiciona as mensagens do banco na tela
       data.messages.forEach((msg) => {
         const role = msg.role === "user" ? "user" : "bot";
         appendMessage(role, msg.content);
-
-        // Alimenta o histórico local para a IA continuar sabendo do que vcs falaram
         chatHistory.push({ role: msg.role, content: msg.content });
       });
-
-      console.log(`Chat ${sessionId} carregado.`);
     }
   } catch (error) {
     console.error("Erro ao carregar mensagens da sessão:", error);
-    alert("Não foi possível carregar as mensagens desta conversa.");
   }
 }
 
-// Inicialização
 window.addEventListener("DOMContentLoaded", loadSidebarSessions);
