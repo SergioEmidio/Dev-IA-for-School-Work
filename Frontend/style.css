@@ -6,13 +6,28 @@
   --text-secondary: #9e9e9e;
   --accent: #7b61ff;
   --border: rgba(255, 255, 255, 0.1);
+  --user-msg-bg: #2f2f2f; /* Fundo balão usuário */
+  --bot-msg-bg: transparent; /* Fundo balão IA (estilo limpo) */
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
 
-body { background: var(--bg-main); color: var(--text-primary); height: 100vh; overflow: hidden; }
+body {
+  background: var(--bg-main);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
 
-.app-container { display: flex; height: 100vh; }
+.app-container {
+  display: flex;
+  height: 100vh;
+}
 
 /* Sidebar */
 .sidebar {
@@ -22,17 +37,18 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
   display: flex;
   flex-direction: column;
   padding: 15px;
+  z-index: 10;
 }
 
 .sidebar-history {
-  flex: 1; /* Faz o histórico ocupar o espaço disponível */
+  flex: 1;
   overflow-y: auto;
 }
 
 .btn-new-chat {
   width: 100%;
   padding: 12px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: white;
@@ -42,9 +58,16 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
   margin-bottom: 10px;
 }
 
-.btn-new-chat:hover { background: rgba(255,255,255,0.1); }
+.btn-new-chat:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
 
-.label { font-size: 11px; color: var(--text-secondary); margin: 25px 0 10px 5px; display: block; }
+.label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 25px 0 10px 5px;
+  display: block;
+}
 
 .history-item {
   padding: 10px;
@@ -58,9 +81,11 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
   gap: 10px;
 }
 
-.history-item.active { background: rgba(123, 97, 255, 0.1); color: white; }
+.history-item.active {
+  background: rgba(123, 97, 255, 0.1);
+  color: white;
+}
 
-/* Sidebar Footer (Configurações) */
 .sidebar-footer {
   padding-top: 15px;
   border-top: 1px solid var(--border);
@@ -69,7 +94,7 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
 .btn-settings {
   width: 100%;
   padding: 12px;
-  background: transparent; /* Cor de fundo igual a da sidebar */
+  background: transparent;
   border: none;
   color: var(--text-secondary);
   text-align: left;
@@ -88,16 +113,22 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
 }
 
 /* Main Content */
-.main-content { flex: 1; display: flex; flex-direction: column; }
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
 
 .main-header {
   padding: 15px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--bg-main);
+  z-index: 5;
 }
 
-/* Estilo para o Sp.IA no Header */
 .user-profile {
   font-weight: bold;
   color: var(--accent);
@@ -111,26 +142,95 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
   margin-bottom: 10px;
 }
 
+/* Welcome Screen */
 .welcome-screen {
   text-align: center;
-  margin-top: 10vh;
+  margin: auto; /* Centraliza verticalmente enquanto ativo */
+  max-width: 600px;
+  padding: 20px;
 }
 
-.welcome-screen p { color: var(--text-secondary); margin-top: 10px; }
+.welcome-screen p {
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
 
-.chat-viewport { flex: 1; overflow-y: auto; }
+/* ÁREA DE MENSAGENS (Ajustada para o seu pedido) */
+.chat-viewport {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+}
 
-/* Input Area */
-.input-section { padding: 20px 15% 40px 15%; }
+.messages-container {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Espaço entre as falas */
+  padding: 0 20px;
+}
+
+/* Estilo Individual das Mensagens */
+.message {
+  max-width: 85%;
+  padding: 12px 18px;
+  line-height: 1.6;
+  font-size: 15px;
+  word-wrap: break-word;
+}
+
+/* Mensagem do Usuário - Balão à Direita */
+.user-message {
+  align-self: flex-end;
+  background-color: var(--user-msg-bg);
+  color: var(--text-primary);
+  border-radius: 18px 18px 2px 18px;
+}
+
+/* Mensagem da IA - Alinhada à Esquerda */
+.bot-message {
+  align-self: flex-start;
+  background-color: var(--bot-msg-bg);
+  color: #e3e3e3;
+  border-radius: 18px 18px 18px 2px;
+  border: 1px solid transparent;
+  padding-left: 0; /* Estilo Gemini: texto direto na margem */
+}
+
+/* Indicador de "Pensando" */
+.typing {
+  font-style: italic;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+/* Input Area - Fixa embaixo */
+.input-section {
+  padding: 20px 15% 40px 15%;
+  background: linear-gradient(transparent, var(--bg-main) 20%);
+}
 
 .input-wrapper {
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 12px 18px;
+  transition: border-color 0.3s;
 }
 
-.input-tools-top { display: flex; gap: 10px; margin-bottom: 5px; }
+.input-wrapper:focus-within {
+  border-color: var(--accent);
+}
+
+.input-tools-top {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 5px;
+}
 
 #messageInput {
   width: 100%;
@@ -141,17 +241,22 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
   outline: none;
   resize: none;
   padding: 10px 0;
+  max-height: 200px;
 }
 
 .input-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   padding-top: 10px;
 }
 
-.action-buttons { display: flex; align-items: center; gap: 10px; }
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .icon-btn {
   background: none;
@@ -159,6 +264,11 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 18px;
+  transition: 0.2s;
+}
+
+.icon-btn:hover {
+  color: var(--accent);
 }
 
 .send-btn {
@@ -172,8 +282,180 @@ body { background: var(--bg-main); color: var(--text-primary); height: 100vh; ov
   display: flex;
   align-items: center;
   justify-content: center;
+  transition:
+    transform 0.2s,
+    background 0.2s;
 }
 
-.model-selector { font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+.send-btn:hover {
+  transform: scale(1.05);
+  background: var(--accent);
+  color: white;
+}
 
-.tool-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 14px; }
+.model-selector {
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.tool-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* --- ANIMAÇÕES E UX ESPECIAIS (NÍVEL GEMINI) --- */
+
+/* Animação de entrada das mensagens (Surgem de baixo para cima) */
+.fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Indicador de Digitação (Pontinhos pulando) */
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  width: fit-content;
+}
+
+.typing-indicator span {
+  height: 8px;
+  width: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  animation: bounce 1.3s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Estilo para o Modo Debug (Fonte técnica) */
+.debug-mode-style {
+  font-family: "Fira Code", "Courier New", monospace !important;
+  background: rgba(123, 97, 255, 0.05) !important;
+  border-left: 3px solid var(--accent) !important;
+  font-size: 14px !important;
+}
+
+/* Melhoria no scrollbar para ficar elegante */
+.chat-viewport::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-viewport::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+.system-message {
+  font-size: 12px;
+  color: var(--accent);
+  text-align: center;
+  margin: 10px 0;
+  opacity: 0.8;
+}
+
+.attached-meta {
+  font-size: 11px;
+  margin-top: 5px;
+  color: var(--text-secondary);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 3px;
+}
+
+.typing span {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  display: inline-block;
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: bounce 1s infinite alternate;
+}
+
+/* Efeito de terminal para o modo DevSecOps */
+.debug-mode-active .message.bot-message {
+  border-left: 3px solid #00ff41; /* Verde de segurança */
+  background: rgba(0, 255, 65, 0.05);
+}
+
+.debug-mode-active .chat-viewport {
+  background: radial-gradient(circle at top, #111 0%, #0d0d0d 100%);
+}
+
+.code-font {
+  font-family: "Fira Code", monospace;
+  font-size: 0.9rem;
+}
+/* --- CONTEXTOS OMNI --- */
+body[data-context="SENTINEL"] {
+  --accent: #00ff41;
+  --bg-chat: #050505;
+}
+
+body[data-context="SENTINEL"] .bot-message {
+  font-family: "Fira Code", monospace;
+  background: rgba(0, 255, 65, 0.05);
+  border-left: 4px solid #00ff41;
+}
+
+body[data-context="SCHOLAR"] {
+  --accent: #7b61ff;
+  --bg-chat: #fcfcfc;
+}
+
+body[data-context="SCHOLAR"] .bot-message {
+  font-family: "Merriweather", serif;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #7b61ff;
+  color: #222;
+}
+
+/* Animação de Entrada das Mensagens */
+.flow-in {
+  animation: flowIn 0.5s ease-out forwards;
+}
+
+@keyframes flowIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
