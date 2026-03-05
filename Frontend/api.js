@@ -1,4 +1,5 @@
-const API_BASE = window.location.origin;
+// Alterado de window.location.origin para a URL fixa do Render
+const API_BASE = "https://spec-ia.onrender.com";
 
 export async function sendMessage(message) {
   const controller = new AbortController();

@@ -1,4 +1,5 @@
 // Configurações e Seletores
+const API_URL = "https://spec-ia.onrender.com"; // URL do seu Backend no Render
 const chatContainer = document.getElementById("chat-container"); // Onde as mensagens aparecem
 const chatForm = document.getElementById("chat-form"); // O formulário de envio
 const userInput = document.getElementById("user-input"); // A caixa de texto
@@ -14,7 +15,7 @@ function appendMessage(role, text) {
   msgDiv.innerText = text;
   chatContainer.appendChild(msgDiv);
 
-  // Scroll automático para o final
+  // Scroll automático para el final
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
@@ -40,8 +41,8 @@ async function handleSubmit(e) {
   chatContainer.appendChild(typingIndicator);
 
   try {
-    // 4. Chamada para a API (URL alterada para /api/chat/send)
-    const response = await fetch("/api/chat/send", {
+    // 4. Chamada para a API (URL agora utiliza API_URL para o Render)
+    const response = await fetch(`${API_URL}/api/chat/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -53,7 +54,7 @@ async function handleSubmit(e) {
     const data = await response.json();
 
     // Remove indicador de carregamento
-    chatContainer.removeChild(typingIndicator);
+    if (typingIndicator.parentNode) chatContainer.removeChild(typingIndicator);
 
     if (response.ok) {
       // 5. Mostra a resposta da IA
@@ -103,8 +104,9 @@ async function loadSidebarSessions() {
   if (!historyList) return;
 
   try {
+    // Chamada ajustada para o Render
     const response = await fetch(
-      "/api/chat/sessions/00000000-0000-0000-0000-000000000000"
+      `${API_URL}/api/chat/sessions/00000000-0000-0000-0000-000000000000`
     );
     const data = await response.json();
 
@@ -130,7 +132,8 @@ async function loadSidebarSessions() {
 // Função para buscar mensagens de uma sessão e exibir na tela
 async function loadChatMessages(sessionId) {
   try {
-    const response = await fetch(`/api/chat/messages/${sessionId}`);
+    // Chamada ajustada para o Render
+    const response = await fetch(`${API_URL}/api/chat/messages/${sessionId}`);
     const data = await response.json();
 
     if (data.success) {
